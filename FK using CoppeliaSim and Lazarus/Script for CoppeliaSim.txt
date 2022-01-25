@@ -1,0 +1,82 @@
+local socket = require("socket")
+local server = assert(socket.bind("*", 5050))
+local tcp = assert(socket.tcp())
+
+function sysCall_init() 
+    simJoints={}
+    for i=1,6,1 do
+        simJoints[i]=sim.getObjectHandle('IRB140_joint'..i)
+    end
+end
+
+function sysCall_actuation()
+
+local client = server:accept()
+     --print("request received")
+     client:settimeout(10)
+     local packet, err = client:receive()
+     if not err then
+        --print("received from client=",packet)
+        
+        cmd=string.sub(packet, 2,3)        
+        -----------------------------------------------
+        if string.find(cmd, "FK") then
+        
+             i= string.find(packet, "J1=")
+             j= string.find(packet, ",J2=")
+             j1=string.sub(packet, i+3, j-1)
+             j1=string.gsub(j1, ",", ".")
+             j1=tonumber(j1)
+             
+             -------------------------------
+             i= string.find(packet, "J2=")
+             j= string.find(packet, ",J3=")
+             j2=string.sub(packet, i+3, j-1)
+             j2=string.gsub(j2, ",", ".")
+             j2=tonumber(j2) 
+             -------------------------------
+             i= string.find(packet, "J3=")
+             j= string.find(packet, ",J4=")
+             j3=string.sub(packet, i+3, j-1)
+             j3=string.gsub(j3, ",", ".")
+             j3=tonumber(j3)   
+             -------------------------------
+             i= string.find(packet, "J4=")
+             j= string.find(packet, ",J5=")
+             j4=string.sub(packet, i+3, j-1)
+             j4=string.gsub(j4, ",", ".")
+             j4=tonumber(j4)
+             -------------------------------
+             i= string.find(packet, "J5=")
+             j= string.find(packet, ",J6=")
+             j5=string.sub(packet, i+3, j-1)
+             j5=string.gsub(j5, ",", ".")
+             j5=tonumber(j5)   
+             -------------------------------
+             i= string.find(packet, "J6=")
+             j= string.find(packet, "]")
+             j6=string.sub(packet, i+3, j-1)
+             j6=string.gsub(j6, ",", ".")
+             j6=tonumber(j6)   
+             -------------------------------
+             --print("J1=",j1)
+             --print("J2=",j2)
+             --print("J3=",j3)
+             --print("J4=",j4)
+             --print("J5=",j5)
+             --print("J6=",j6)
+             -------------------------------
+             sim.setJointPosition(simJoints[1],j1)
+             sim.setJointPosition(simJoints[2],j2)
+             sim.setJointPosition(simJoints[3],j3)
+             sim.setJointPosition(simJoints[4],j4)
+             sim.setJointPosition(simJoints[5],j5)
+             sim.setJointPosition(simJoints[6],j6)
+        end
+        
+client:send(packet .. "\n") 
+     end
+     -- print("closing socket")
+      client:close()
+
+end
